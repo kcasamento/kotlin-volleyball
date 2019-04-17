@@ -1,0 +1,44 @@
+version: "3"
+
+services:
+
+  scraper:
+    build:
+      context: ../scraper/
+      dockerfile: Dockerfile
+    ports:
+      - '8201:8201'
+    networks:
+      - infrastructure_default
+    volumes:
+      - ../scraper/target:/app
+    environment:
+      - CONSUL_HOST=http://consul-server-bootstrap
+      - CONSUL_PORT=8500
+      - SCRAPER_HOST=scraper
+      - MONGODB_HOST=mongodb://mongo
+      - MONGODB_PORT=27017
+      - BROKER_BOOTSTRAP_SERVERS=kafka1:19092,kafka2:29092,kafka3:39092
+
+  crawl:
+    build:
+      context: ../crawl/
+      dockerfile: Dockerfile
+    ports:
+      - '8301:8301'
+    networks:
+      - infrastructure_default
+    volumes:
+      - ../crawl/target:/app
+    environment:
+      - CONSUL_HOST=http://consul-server-bootstrap
+      - CONSUL_PORT=8500
+      - CRAWL_HOST=crawl
+      - MONGODB_HOST=mongodb://mongo
+      - MONGODB_PORT=27017
+      - BROKER_BOOTSTRAP_SERVERS=kafka1:19092,kafka2:29092,kafka3:39092
+
+
+networks:
+  infrastructure_default:
+    external: true

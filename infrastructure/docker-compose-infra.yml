@@ -1,0 +1,103 @@
+version: "3"
+
+services:
+
+  consul-agent-1: &consul-agent
+    image: consul:latest
+    environment:
+      - CONSUL_BIND_INTERFACE=eth0
+    command: "agent -retry-join consul-server-bootstrap -client 0.0.0.0"
+
+  consul-agent-2:
+    <<: *consul-agent
+
+  consul-agent-3:
+    <<: *consul-agent
+
+  consul-server-1: &consul-server
+    <<: *consul-agent
+    command: "agent -server -retry-join consul-server-bootstrap -client 0.0.0.0"
+
+  consul-server-2:
+    <<: *consul-server
+
+  consul-server-bootstrap:
+    <<: *consul-agent
+    ports:
+      - "8400:8400"
+      - "8500:8500"
+      - "8600:8600"
+      - "8600:8600/udp"
+    command: "agent -server -bootstrap-expect 3 -ui -client 0.0.0.0"
+
+  mongo:
+    image: mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - data-volume:/data/db
+
+  zookeeper-1:
+    image: 'bitnami/zookeeper:latest'
+    ports:
+      - "12181:12181"
+    environment:
+      - ZOO_SERVER_ID=1
+      - ZOO_PORT_NUMBER=12181
+      - ALLOW_ANONYMOUS_LOGIN=yes
+      - ZOO_SERVERS=zookeeper-1:12888:13888;zookeeper-2:22888:23888;zookeeper-3:32888:33888
+  zookeeper-2:
+    image: 'bitnami/zookeeper:latest'
+    ports:
+      - "22181:22181"
+    environment:
+      - ZOO_SERVER_ID=2
+      - ZOO_PORT_NUMBER=22181
+      - ALLOW_ANONYMOUS_LOGIN=yes
+      - ZOO_SERVERS=zookeeper-1:12888:13888;zookeeper-2:22888:23888;zookeeper-3:32888:33888
+  zookeeper-3:
+    image: 'bitnami/zookeeper:latest'
+    ports:
+      - "32181:32181"
+    environment:
+      - ZOO_SERVER_ID=3
+      - ALLOW_ANONYMOUS_LOGIN=yes
+      - ZOO_SERVERS=zookeeper-1:12888:13888;zookeeper-2:22888:23888;zookeeper-3:32888:33888
+
+  kafka1:
+    image: 'bitnami/kafka:latest'
+    ports:
+      - '19092:19092'
+    environment:
+      - KAFKA_ZOOKEEPER_CONNECT=zookeeper-1:12181,zookeeper-2:12181,zookeeper-3:12181
+      - ALLOW_PLAINTEXT_LISTENER=yes
+      - KAFKA_ADVERTISED_LISTENERS=LISTENER_DOCKER_INTERNAL://kafka1:9092,LISTENER_DOCKER_EXTERNAL://${DOCKER_HOST_IP:-127.0.0.1}:19092
+      - KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=LISTENER_DOCKER_INTERNAL:PLAINTEXT,LISTENER_DOCKER_EXTERNAL:PLAINTEXT
+      - KAFKA_INTER_BROKER_LISTENER_NAME=LISTENER_DOCKER_INTERNAL
+      - KAFKA_LISTENERS=LISTENER_DOCKER_INTERNAL://0.0.0.0:9092,LISTENER_DOCKER_EXTERNAL://0.0.0.0:19092
+  kafka2:
+    image: 'bitnami/kafka:latest'
+    ports:
+      - '29092:29092'
+    environment:
+      - KAFKA_ZOOKEEPER_CONNECT=zookeeper-1:12181,zookeeper-2:12181,zookeeper-3:12181
+      - ALLOW_PLAINTEXT_LISTENER=yes
+      - KAFKA_ADVERTISED_LISTENERS=LISTENER_DOCKER_INTERNAL://kafka2:9092,LISTENER_DOCKER_EXTERNAL://${DOCKER_HOST_IP:-127.0.0.1}:29092
+      - KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=LISTENER_DOCKER_INTERNAL:PLAINTEXT,LISTENER_DOCKER_EXTERNAL:PLAINTEXT
+      - KAFKA_INTER_BROKER_LISTENER_NAME=LISTENER_DOCKER_INTERNAL
+      - KAFKA_LISTENERS=LISTENER_DOCKER_INTERNAL://0.0.0.0:9092,LISTENER_DOCKER_EXTERNAL://0.0.0.0:29092
+
+  kafka3:
+    image: 'bitnami/kafka:latest'
+    ports:
+      - '39092:39092'
+    environment:
+      - KAFKA_ZOOKEEPER_CONNECT=zookeeper-1:12181,zookeeper-2:12181,zookeeper-3:12181
+      - ALLOW_PLAINTEXT_LISTENER=yes
+      - KAFKA_ADVERTISED_LISTENERS=LISTENER_DOCKER_INTERNAL://kafka3:9092,LISTENER_DOCKER_EXTERNAL://${DOCKER_HOST_IP:-127.0.0.1}:39092
+      - KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=LISTENER_DOCKER_INTERNAL:PLAINTEXT,LISTENER_DOCKER_EXTERNAL:PLAINTEXT
+      - KAFKA_INTER_BROKER_LISTENER_NAME=LISTENER_DOCKER_INTERNAL
+      - KAFKA_LISTENERS=LISTENER_DOCKER_INTERNAL://0.0.0.0:9092,LISTENER_DOCKER_EXTERNAL://0.0.0.0:39092
+
+volumes:
+  data-volume:
