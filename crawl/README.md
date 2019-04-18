@@ -1,8 +1,8 @@
-#Crawl Service
+# Crawl Service
 The purpose of the crawl module is be the master record of all crawl jobs and record the start and end timestamps and status.  The generated id of a crawl job is used throughout the rest of the application to map back to the originating job.
 
 ## API
-###Start crawl job
+### Start crawl job
 
 Starts a new crawl job and generates a correlation id.
 
@@ -21,7 +21,7 @@ Produces Event:
 
     kac.crawl.event::CrawlJobStarted
 
-###Get Crawl Jobs
+### Get Crawl Jobs
 
 Gets all crawl jobs from the database.
 
@@ -48,7 +48,7 @@ Returns:
         ...
     ]
     
-###Get Recent Crawl Jobs
+### Get Recent Crawl Jobs
 
 Gets the top most recently completed crawl jobs
 
@@ -71,7 +71,7 @@ Returns:
         }
     ]
 
-###Complete Crawl Job
+### Complete Crawl Job
 
 Sets the status of a running crawl job to COMPLETE.
 

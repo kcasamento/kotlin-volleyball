@@ -1,8 +1,8 @@
-#Scraper Service
+# Scraper Service
 TODO
 
 ## API
-###Start scraping the site
+### Start scraping the site
 
 Starts a new crawl job and generates a correlation id.
 
@@ -16,7 +16,7 @@ Produces Event:
 
     kac.scraper.event::ScapeFinished
 
-###Get Game details from previous crawl
+### Get Game details from previous crawl
 
 Gets all games that were scraped from a given crawl job
 

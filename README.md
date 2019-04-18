@@ -52,7 +52,7 @@ TODO:
 - Finish README.md's in each module
 - Dependency Inject/IoC
 - Error Handling
-- Dead Letter Queue and retry logic for consumer apps
+- Dead Letter Queue and retry logic for consumer apps (https://eng.uber.com/reliable-reprocessing/)
 
 ## Future TODO
 - Add front end to give users a settings portal (subscribe/unsubscibe/etc)
