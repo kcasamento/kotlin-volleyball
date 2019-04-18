@@ -4,7 +4,7 @@ import io.ktor.client.HttpClient
 import io.ktor.client.request.get
 import kac.broker.dsl.KafkaDSL
 import kac.crawl.model.CrawlJob
-import kac.scraper.event.NewGamesAdded
+import kac.scraper.event.ScapeFinished
 import kac.scraper.model.OpenPlayGame
 import kac.transformer.event.NewGamesOpened
 import kac.transformer.repository.TransformerRepository
@@ -17,11 +17,11 @@ class Handler(
     private val brokerProps: Properties
 ) {
 
-    suspend fun handle(event: NewGamesAdded) {
+    suspend fun handle(event: ScapeFinished) {
 
-        println("Handling NewGamesAdded")
+        println("Handling ScapeFinished")
 
-        // 1. get last 2 runs - crawl/recent
+        // Get the last 2 runs - crawl/recent
         val crawlJobs = httpClient
             .get<List<CrawlJob>>("http://crawl-service/crawl/recent/2")
 
@@ -32,6 +32,11 @@ class Handler(
         // If this event is raised this should
         // technically never happen
         if(currentJob == null) return
+
+        // If this event is not the latest crawl job
+        // it has been lapped by another job
+        // and should be ignored
+        if(currentJob.id.toHexString() != event.corrId) return
 
         // Get the games from the most recent (current) crawl job
         val currentGames =  httpClient
@@ -65,13 +70,20 @@ class Handler(
             // are not in the list of open spots from the last run
             //
             // The difference is new open spots
+
+            // Convert to Set for faster performance
             val previousGamesSet = previousGames.distinctBy { it.gameId }.toSet()
+            // Collect the id's of previously recorded games
             val referenceIds = previousGamesSet.map { it.gameId }
 
+            // Filter the game id's that do not match the
+            // the list of previous game id's i.e., newly crawled games
             gamesToWrite = currentGames.filter { it.gameId !in referenceIds }
 
         }
 
+        // If no new games are found, do nothing
+        // Else record the new games
         if(gamesToWrite.count() > 0) {
 
             repository.upsertGames(gamesToWrite)

@@ -4,7 +4,7 @@ import kac.broker.dsl.KafkaDSL
 import kac.scraper.action.GetGames
 import kac.scraper.action.GetNewGames
 import kac.scraper.action.ScrapeForNewNYUrbanGames
-import kac.scraper.event.NewGamesAdded
+import kac.scraper.event.ScapeFinished
 import kac.scraper.event.ScraperErrored
 import kac.scraper.model.OpenPlayGame
 import kac.scraper.repository.*
@@ -31,7 +31,7 @@ class ScraperHandler(
                     action.params
                 ).scrapeAndRecordGames()
 
-                val event = NewGamesAdded(action.corrId)
+                val event = ScapeFinished(action.corrId)
                 send(event).get()
 
 

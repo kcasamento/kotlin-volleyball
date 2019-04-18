@@ -1,21 +1,20 @@
-# Controller
+# Controller Service
 The controller service acts as the main consumer of all application events being streamed to kafka.  It subscribes to all topics and handles each event by its respective business logic requirements.
 
-Topics:
- - *kac.crawl.events* - all events emitted from the Crawl service
- - *kac.scraper.events* - all events emitted from the Scraper service
-
+##Consumes (Topic::Event)
+- kac.crawl.event::CrawlJobStarted
+- kac.scraper.event::ScrapeFinished
+- kac.crawl.event::CrawlJobCompleted
 
 ## Building and Running
-In top level project /volleyball run:
-`mvn clean install`
+In top level project /volleyball run to build and package all services/dependencies:
 
-To package all services run:
-`mvn package`
+    `mvn clean install`
 
+If using Maven you can run with the command in the service folder (/volleyball/controller):
 
-If using Maven you can run with the command in the service folder (/volleyball/crawl):
-`mvn exec:java -Dexec.mainClass="kac.controller.MainKt"`
+    `mvn exec:java -Dexec.mainClass="kac.controller.MainKt"`
 
 For use in a JVM, run the jar file in the service folder(/volleyball/crawl):
-`java -jar target/scraper-1.0-SNAPSHOT-jar-with-dependencies.jar`
+
+    `java -jar target/scraper-1.0-SNAPSHOT-jar-with-dependencies.jar`

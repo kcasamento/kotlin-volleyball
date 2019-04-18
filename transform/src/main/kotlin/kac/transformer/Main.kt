@@ -8,19 +8,15 @@ import io.ktor.client.HttpClient
 import io.ktor.client.engine.apache.Apache
 import io.ktor.client.features.json.GsonSerializer
 import io.ktor.client.features.json.JsonFeature
-import javafx.application.Application.launch
 import kac.broker.dsl.*
 import kac.common.config.BrokerApplicationConfig
 import kac.common.infrastructure.ConsulFeature
-import kac.scraper.event.NewGamesAdded
-import kac.scraper.model.OpenPlayGame
+import kac.scraper.event.ScapeFinished
 import kac.transformer.repository.TransformerRepository
 import kotlinx.coroutines.runBlocking
 import org.bson.types.ObjectId
-import org.litote.kmongo.coroutine.CoroutineClient
 import org.litote.kmongo.coroutine.coroutine
 import org.litote.kmongo.reactivestreams.KMongo
-import java.lang.reflect.Type
 
 
 fun main(args: Array<String>) {
@@ -65,11 +61,11 @@ fun main(args: Array<String>) {
         ?: ""
     val kafkaTopics = properties.getProperty("topics").split(',')
     val groupId = properties.getProperty("groupId")
-    
+
     val broker = KafkaDSL(kafkaHosts)
     val handler = Handler(client, newGamesRepository, broker, properties)
 
-    // Listen for NewGamesAdded Event from the scraper service
+    // Listen for ScapeFinished Event from the scraper service
     broker.consumer(kafkaTopics, groupId) {
 
         Runtime.getRuntime().addShutdownHook(Thread(Runnable {
@@ -89,7 +85,7 @@ fun main(args: Array<String>) {
 
                 runBlocking {
                     when (eventType) {
-                        NewGamesAdded::class.java -> handler.handle(event as NewGamesAdded)
+                        ScapeFinished::class.java -> handler.handle(event as ScapeFinished)
                     }
                 }
             }

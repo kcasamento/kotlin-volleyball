@@ -13,10 +13,7 @@ import kac.common.config.BrokerApplicationConfig
 import kac.common.infrastructure.ConsulFeature
 import kac.crawl.event.CrawlJobCompleted
 import kac.crawl.event.CrawlJobStarted
-import kac.scraper.event.NewGamesAdded
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.async
-import kotlinx.coroutines.launch
+import kac.scraper.event.ScapeFinished
 import kotlinx.coroutines.runBlocking
 import org.bson.types.ObjectId
 import java.lang.Class
@@ -68,6 +65,8 @@ fun main(args: Array<String>) {
 
                 try {
 
+                    // Serialize the event back into
+                    // it event type
                     val eventType = Class.forName(type)
                     val event = gson.fromJson(value, eventType)
 
@@ -76,10 +75,14 @@ fun main(args: Array<String>) {
 
                     runBlocking {
                         when (eventType) {
-                            NewGamesAdded::class.java -> handler.handle(event as NewGamesAdded)
 
+                            // Result -> process new games against last run to determine newly opened games
+                            ScapeFinished::class.java -> handler.handle(event as ScapeFinished)
+
+                            // Result -> currently no-op, but could be used for reporting, etc
                             CrawlJobCompleted::class.java -> handler.handle(event as CrawlJobCompleted)
 
+                            // Result -> start the scrape job to look for new games
                             CrawlJobStarted::class.java -> handler.handle(event as CrawlJobStarted)
                         }
                     }
