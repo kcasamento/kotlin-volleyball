@@ -11,10 +11,26 @@ class KafkaDSL(bootstrapServers: String) {
             kafkaConfig,
             topic).doProduce()
 
+    suspend fun <TReturn> producerAsync(
+        topic: String,
+        doProduce: suspend Producer.() -> TReturn) = Producer(
+            kafkaConfig,
+            topic).doProduce()
+
+
     fun consumer(
         topics: List<String>,
         groupId: String,
         doConsumer: Consumer.() -> Unit) =
+        Consumer(
+            kafkaConfig,
+            topics,
+            groupId).doConsumer()
+
+    suspend fun consumerAsync(
+        topics: List<String>,
+        groupId: String,
+        doConsumer: suspend Consumer.() -> Unit) =
         Consumer(
             kafkaConfig,
             topics,

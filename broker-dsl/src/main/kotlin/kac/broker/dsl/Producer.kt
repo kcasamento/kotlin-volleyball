@@ -10,6 +10,7 @@ import java.lang.reflect.Type
 import java.util.*
 import java.util.concurrent.Future
 
+
 class Producer(
     kafkaConfig: KafkaConfig,
     private val topic: String
@@ -37,7 +38,7 @@ class Producer(
         val messageString = this.gson.toJson(message)
 
         val record = ProducerRecord<String, String>(topic, messageString)
-        record.headers().add("X-Payload-Type", message::class.java.toString().toByteArray())
+        record.headers().add("X-Payload-Type", message::class.qualifiedName?.toByteArray())
 
         return kafkaProducer.send(record)
 

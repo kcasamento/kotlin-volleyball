@@ -25,11 +25,6 @@ import org.litote.kmongo.coroutine.*
 
 fun Application.main() {
 
-    // Consul Environment
-    val consulHost = System.getenv("CONSUL_HOST") ?: "http://localhost"
-    val consulPort = System.getenv("CONSUL_PORT") ?: 8500
-    val consulUri = "$consulHost:$consulPort"
-
     // Mongo Environment
     val mongoHost = System.getenv("MONGODB_HOST") ?: "mongodb://localhost"
     val mongoPort = System.getenv("MONGODB_PORT") ?: 27017
@@ -72,11 +67,18 @@ fun Application.main() {
 
     // Kafka Environment
     val properties = BrokerApplicationConfig().getProperties()
-    val kafkaHosts = System.getenv("BROKER_BOOTSTRAP_SERVERS") ?: properties.getProperty("bootstrap.servers") ?: ""
+    val kafkaHosts = System.getenv("BROKER_BOOTSTRAP_SERVERS")
+        ?: properties.getProperty("bootstrap.servers")
+        ?: ""
     val broker = KafkaDSL(kafkaHosts)
+    val scraperEventTopic = properties.getProperty("topic.scraper.event")
 
     // Bootstrap Handler
-    val handler = ScraperHandler(scrapeGamesRepository, newGamesRepository, broker, properties)
+    val handler = ScraperHandler(
+        scrapeGamesRepository,
+        newGamesRepository,
+        broker,
+        scraperEventTopic)
 
 
     // Bootstrap Ktor Web Server

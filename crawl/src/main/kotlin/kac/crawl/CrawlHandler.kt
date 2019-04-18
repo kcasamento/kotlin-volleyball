@@ -7,6 +7,7 @@ import kac.broker.dsl.KafkaDSL
 import kac.broker.dsl.kafka
 import kac.crawl.action.*
 import kac.crawl.event.CrawlJobCompleted
+import kac.crawl.event.CrawlJobStarted
 import kac.crawl.model.CrawlJob
 import kac.crawl.repository.CrawlJobMongoRepository
 import org.bson.types.ObjectId
@@ -18,7 +19,7 @@ class CrawlHandler(
     private val crawlRepository: CrawlJobMongoRepository,
     private val httpClient: HttpClient,
     private val broker: KafkaDSL,
-    private val brokerProps: Properties
+    private val crawlEventTopic: String
 ) {
 
     suspend fun handle(action: GetCrawlJobs): List<CrawlJob> {
@@ -35,10 +36,25 @@ class CrawlHandler(
 
     suspend fun handle(action: StartCrawlJob): CrawlJob {
 
-        val newJob = crawlRepository.startJob()
-        httpClient.post<String>("http://scraper-service/scrape/${newJob.id}")
+        return broker.producerAsync<CrawlJob>(crawlEventTopic) {
 
-        return newJob
+            try {
+
+                val newJob = crawlRepository.startJob()
+
+                val event = CrawlJobStarted(newJob.id.toHexString(), newJob.startTimestamp)
+
+                send(event).get()
+
+                newJob
+
+            } finally {
+
+                flush()
+
+            }
+        }
+
 
     }
 
@@ -46,17 +62,24 @@ class CrawlHandler(
 
         val job = crawlRepository.completeJob(ObjectId(action.id), action.message)
 
-        broker.producer(brokerProps.getProperty("topic")) {
+        broker.producer(crawlEventTopic) {
 
-            val event = CrawlJobCompleted(
-                job.id.toHexString(),
-                action.message,
-                job.completeTimestamp?:
+            try {
+
+                val event = CrawlJobCompleted(
+                    job.id.toHexString(),
+                    action.message,
+                    job.completeTimestamp?:
                     Date.from(LocalDateTime.now(ZoneOffset.UTC).toInstant(ZoneOffset.UTC)))
 
-            send(event).get()
+                send(event).get()
 
-            flush()
+            } finally {
+
+                flush()
+
+            }
+
 
         }
 

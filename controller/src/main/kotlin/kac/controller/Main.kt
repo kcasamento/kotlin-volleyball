@@ -8,20 +8,22 @@ import io.ktor.client.HttpClient
 import io.ktor.client.engine.apache.Apache
 import io.ktor.client.features.json.GsonSerializer
 import io.ktor.client.features.json.JsonFeature
-import javafx.application.Application.launch
 import kac.broker.dsl.*
 import kac.common.config.BrokerApplicationConfig
 import kac.common.infrastructure.ConsulFeature
 import kac.crawl.event.CrawlJobCompleted
+import kac.crawl.event.CrawlJobStarted
 import kac.scraper.event.NewGamesAdded
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.bson.types.ObjectId
-import java.lang.reflect.Type
+import java.lang.Class
 
 
 fun main(args: Array<String>) {
 
-    val properties = BrokerApplicationConfig().getProperties()
     val gson = Gson()
     val client = HttpClient(Apache) {
 
@@ -45,8 +47,17 @@ fun main(args: Array<String>) {
 
     val handler = Handler(client)
 
-    kafka(properties.getProperty("bootstrap.servers")) {
-        consumer(properties.getProperty("topic").split(','), properties.getProperty("groupId")) {
+    val properties = BrokerApplicationConfig().getProperties()
+    val kafkaHosts = System.getenv("BROKER_BOOTSTRAP_SERVERS")
+        ?: properties.getProperty("bootstrap.servers")
+        ?: ""
+    val kafkaTopics = properties.getProperty("topics").split(',')
+    val groupId = properties.getProperty("groupId")
+
+
+    kafka(kafkaHosts) {
+
+        consumer(kafkaTopics, groupId) {
 
             Runtime.getRuntime().addShutdownHook(Thread(Runnable {
                 stop()
@@ -55,15 +66,32 @@ fun main(args: Array<String>) {
             // Start consuming until the process is shutdown
             consume { topic: String, key: String, value: String, type: String ->
 
-                println("New message on: $topic")
+                try {
 
-                when(type) {
-                    NewGamesAdded::class.java.toString() -> runBlocking { handler.handle(gson.fromJson<NewGamesAdded>(value, NewGamesAdded::class.java)) }
-                    CrawlJobCompleted::class.java.toString() -> runBlocking {handler.handle(gson.fromJson<CrawlJobCompleted>(value, CrawlJobCompleted::class.java))}
+                    val eventType = Class.forName(type)
+                    val event = gson.fromJson(value, eventType)
+
+
+                    println("New message on: $topic")
+
+                    runBlocking {
+                        when (eventType) {
+                            NewGamesAdded::class.java -> handler.handle(event as NewGamesAdded)
+
+                            CrawlJobCompleted::class.java -> handler.handle(event as CrawlJobCompleted)
+
+                            CrawlJobStarted::class.java -> handler.handle(event as CrawlJobStarted)
+                        }
+                    }
                 }
+                catch (typeInvalidError: ClassNotFoundException) {}
+                catch (typeInitError: ExceptionInInitializerError) {}
+                catch (typeLinkageError: LinkageError) {}
 
             }
+
         }
+
     }
 
 }

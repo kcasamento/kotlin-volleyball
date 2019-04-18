@@ -60,13 +60,17 @@ fun main(args: Array<String>) {
 
 
     val properties = BrokerApplicationConfig().getProperties()
-    val kafkaHosts = System.getenv("BROKER_BOOTSTRAP_SERVERS") ?: properties.getProperty("bootstrap.servers") ?: ""
+    val kafkaHosts = System.getenv("BROKER_BOOTSTRAP_SERVERS")
+        ?: properties.getProperty("bootstrap.servers")
+        ?: ""
+    val kafkaTopics = properties.getProperty("topics").split(',')
+    val groupId = properties.getProperty("groupId")
+    
     val broker = KafkaDSL(kafkaHosts)
-
     val handler = Handler(client, newGamesRepository, broker, properties)
 
     // Listen for NewGamesAdded Event from the scraper service
-    broker.consumer(properties.getProperty("topic").split(','), properties.getProperty("groupId")) {
+    broker.consumer(kafkaTopics, groupId) {
 
         Runtime.getRuntime().addShutdownHook(Thread(Runnable {
             stop()
@@ -75,14 +79,26 @@ fun main(args: Array<String>) {
         // Start consuming until the process is shutdown
         consume { topic: String, key: String, value: String, type: String ->
 
-            println("New message on: $topic")
+            try {
 
-            when(type) {
-                NewGamesAdded::class.java.toString() -> runBlocking {
-                    handler.handle(gson.fromJson<NewGamesAdded>(value, NewGamesAdded::class.java))
+                val eventType = Class.forName(type)
+                val event = gson.fromJson(value, eventType)
+
+
+                println("New message on: $topic")
+
+                runBlocking {
+                    when (eventType) {
+                        NewGamesAdded::class.java -> handler.handle(event as NewGamesAdded)
+                    }
                 }
             }
+            catch (typeInvalidError: ClassNotFoundException) {}
+            catch (typeInitError: ExceptionInInitializerError) {}
+            catch (typeLinkageError: LinkageError) {}
+
         }
+
     }
 
 }

@@ -57,9 +57,17 @@ fun Application.main() {
 
     // Kafka Environment
     val properties = BrokerApplicationConfig().getProperties()
-    val kafkaHosts = System.getenv("BROKER_BOOTSTRAP_SERVERS") ?: properties.getProperty("bootstrap.servers") ?: ""
+    val kafkaHosts = System.getenv("BROKER_BOOTSTRAP_SERVERS")
+        ?: properties.getProperty("bootstrap.servers")
+        ?: ""
+    val crawlEventTopic = properties.getProperty("crawl.topic")
+
     val broker = KafkaDSL(kafkaHosts)
-    val handler = CrawlHandler(crawlRepository, client, broker, properties)
+    val handler = CrawlHandler(
+        crawlRepository,
+        client,
+        broker,
+        crawlEventTopic)
 
     install(ContentNegotiation) {
         gson {

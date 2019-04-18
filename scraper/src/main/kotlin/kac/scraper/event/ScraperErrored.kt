@@ -1,3 +1,3 @@
 package kac.scraper.event
 
-data class ScraperErrored(val message: String)
+data class ScraperErrored(val exception: Exception, val friendlyMessage: String = "")

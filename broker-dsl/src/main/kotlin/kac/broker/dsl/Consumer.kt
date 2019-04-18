@@ -1,12 +1,15 @@
 package kac.broker.dsl
 
 import com.google.gson.Gson
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.common.serialization.StringDeserializer
 import java.lang.reflect.Type
 import java.time.Duration
 import java.util.*
+import javax.xml.bind.JAXBElement
 
 class Consumer(
     kafkaConfig: KafkaConfig,
