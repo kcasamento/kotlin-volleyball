@@ -34,8 +34,8 @@ services:
     image: mongo
     ports:
       - "27017:27017"
-    volumes:
-      - data-volume:/data/db
+#    volumes:
+#      - data-volume:/data/db
 
   zookeeper-1:
     image: 'bitnami/zookeeper:latest'
@@ -99,5 +99,5 @@ services:
       - KAFKA_INTER_BROKER_LISTENER_NAME=LISTENER_DOCKER_INTERNAL
       - KAFKA_LISTENERS=LISTENER_DOCKER_INTERNAL://0.0.0.0:9092,LISTENER_DOCKER_EXTERNAL://0.0.0.0:39092
 
-volumes:
-  data-volume:
+#volumes:
+#  data-volume:

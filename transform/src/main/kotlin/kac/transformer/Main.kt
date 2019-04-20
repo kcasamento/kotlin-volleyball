@@ -21,6 +21,11 @@ import org.litote.kmongo.reactivestreams.KMongo
 
 fun main(args: Array<String>) {
 
+    val consulHost = System.getenv("CONSUL_HOST") ?: "http://localhost"
+    val consulPort = System.getenv("CONSUL_PORT") ?: 8500
+    val consulUri = "$consulHost:$consulPort"
+    val localEnv = consulHost == "http://localhost"
+
     // Mongo Environment
     val mongoHost = System.getenv("MONGODB_HOST") ?: "mongodb://localhost"
     val mongoPort = System.getenv("MONGODB_PORT") ?: 27017
@@ -36,8 +41,8 @@ fun main(args: Array<String>) {
     val client = HttpClient(Apache) {
 
         install(ConsulFeature) {
-            consulUrl = "http://localhost:8500"
-            local = true
+            consulUrl = consulUri
+            local = localEnv
         }
 
         install(JsonFeature) {

@@ -27,15 +27,6 @@ class KafkaDSL(bootstrapServers: String) {
             topics,
             groupId).doConsumer()
 
-    suspend fun consumerAsync(
-        topics: List<String>,
-        groupId: String,
-        doConsumer: suspend Consumer.() -> Unit) =
-        Consumer(
-            kafkaConfig,
-            topics,
-            groupId).doConsumer()
-
 }
 
 fun kafka(bootstrapServers: String, init: KafkaDSL.() -> Unit) =

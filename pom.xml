@@ -13,7 +13,6 @@
         <module>scraper</module>
         <module>controller</module>
         <module>transform</module>
-
     </modules>
     <packaging>pom</packaging>
 

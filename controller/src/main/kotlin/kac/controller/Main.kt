@@ -6,6 +6,7 @@ import com.google.gson.JsonPrimitive
 import com.google.gson.JsonSerializer
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.apache.Apache
+import io.ktor.client.features.BadResponseStatusException
 import io.ktor.client.features.json.GsonSerializer
 import io.ktor.client.features.json.JsonFeature
 import kac.broker.dsl.*
@@ -22,12 +23,20 @@ import java.lang.Class
 fun main(args: Array<String>) {
 
     val gson = Gson()
+
+    val consulHost = System.getenv("CONSUL_HOST") ?: "http://localhost"
+    val consulPort = System.getenv("CONSUL_PORT") ?: 8500
+    val consulUri = "$consulHost:$consulPort"
+    val localEnv = consulHost == "http://localhost"
+
+
     val client = HttpClient(Apache) {
 
         install(ConsulFeature) {
-            consulUrl = "http://localhost:8500"
-            local = true
+            consulUrl = consulUri
+            local = localEnv
         }
+
         install(JsonFeature) {
             serializer = GsonSerializer {
                 this.setDateFormat("yyyy-MM-dd'T'HH:mm:ssZ")
@@ -90,6 +99,9 @@ fun main(args: Array<String>) {
                 catch (typeInvalidError: ClassNotFoundException) {}
                 catch (typeInitError: ExceptionInInitializerError) {}
                 catch (typeLinkageError: LinkageError) {}
+                catch (badResponseError: BadResponseStatusException) {
+                    // retry
+                }
 
             }
 

@@ -88,7 +88,7 @@ class Handler(
 
             repository.upsertGames(gamesToWrite)
 
-            broker.producer(brokerProps.getProperty("topic")) {
+            broker.producer(brokerProps.getProperty("topics")) {
 
                 val event = NewGamesOpened(currentJob.id.toHexString())
                 send(event).get()

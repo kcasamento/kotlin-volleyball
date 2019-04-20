@@ -34,8 +34,8 @@ services:
     image: mongo
     ports:
       - "27017:27017"
-    volumes:
-      - data-volume:/data/db
+  #    volumes:
+  #      - data-volume:/data/db
 
   zookeeper-1:
     image: 'bitnami/zookeeper:latest'
@@ -122,6 +122,9 @@ services:
       - consul-server-2
       - consul-server-bootstrap
       - mongo
+      - zookeeper-1
+      - zookeeper-2
+      - zookeeper-3
       - kafka1
       - kafka2
       - kafka3
@@ -131,7 +134,7 @@ services:
       context: ../crawl/
       dockerfile: Dockerfile
     ports:
-        - '8301:8301'
+      - '8301:8301'
     volumes:
       - ../crawl/target:/app
     environment:
@@ -149,9 +152,66 @@ services:
       - consul-server-2
       - consul-server-bootstrap
       - mongo
+      - zookeeper-1
+      - zookeeper-2
+      - zookeeper-3
       - kafka1
       - kafka2
       - kafka3
 
-volumes:
-  data-volume:
+  controller:
+    build:
+      context: ../controller/
+      dockerfile: Dockerfile
+    volumes:
+      - ../controller/target:/app
+    environment:
+      - CONSUL_HOST=http://consul-server-bootstrap
+      - CONSUL_PORT=8500
+      - MONGODB_HOST=mongodb://mongo
+      - MONGODB_PORT=27017
+      - BROKER_BOOTSTRAP_SERVERS=kafka1:19092,kafka2:29092,kafka3:39092
+    depends_on:
+      - consul-agent-1
+      - consul-agent-2
+      - consul-agent-3
+      - consul-server-1
+      - consul-server-2
+      - consul-server-bootstrap
+      - mongo
+      - zookeeper-1
+      - zookeeper-2
+      - zookeeper-3
+      - kafka1
+      - kafka2
+      - kafka3
+
+  transform:
+    build:
+      context: ../transform/
+      dockerfile: Dockerfile
+    volumes:
+      - ../transform/target:/app
+    environment:
+      - CONSUL_HOST=http://consul-server-bootstrap
+      - CONSUL_PORT=8500
+      - MONGODB_HOST=mongodb://mongo
+      - MONGODB_PORT=27017
+      - BROKER_BOOTSTRAP_SERVERS=kafka1:19092,kafka2:29092,kafka3:39092
+    depends_on:
+      - consul-agent-1
+      - consul-agent-2
+      - consul-agent-3
+      - consul-server-1
+      - consul-server-2
+      - consul-server-bootstrap
+      - mongo
+      - zookeeper-1
+      - zookeeper-2
+      - zookeeper-3
+      - kafka1
+      - kafka2
+      - kafka3
+
+#volumes:
+#  data-volume:

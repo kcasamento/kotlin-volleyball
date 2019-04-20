@@ -31,8 +31,6 @@ class Consumer(
         config[ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG] = StringDeserializer::class.java
         config[ConsumerConfig.GROUP_ID_CONFIG] = groupId
         config[ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG] = false
-//        config["errors.tolerance"] = "all"
-//        config["errors.deadletterqueue.topic.name"] = "kac.volleyball.errors"
 
         // TODO: Other Kafka consumer properties
 

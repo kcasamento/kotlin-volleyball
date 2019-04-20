@@ -18,7 +18,7 @@ services:
       - SCRAPER_HOST=scraper
       - MONGODB_HOST=mongodb://mongo
       - MONGODB_PORT=27017
-      - BROKER_BOOTSTRAP_SERVERS=kafka1:19092,kafka2:29092,kafka3:39092
+      - BROKER_BOOTSTRAP_SERVERS=kafka1:9092,kafka2:9092,kafka3:9092
 
   crawl:
     build:
@@ -36,8 +36,37 @@ services:
       - CRAWL_HOST=crawl
       - MONGODB_HOST=mongodb://mongo
       - MONGODB_PORT=27017
-      - BROKER_BOOTSTRAP_SERVERS=kafka1:19092,kafka2:29092,kafka3:39092
+      - BROKER_BOOTSTRAP_SERVERS=kafka1:9092,kafka2:9092,kafka3:9092
 
+  controller:
+    build:
+      context: ../controller/
+      dockerfile: Dockerfile
+    networks:
+      - infrastructure_default
+    volumes:
+      - ../controller/target:/app
+    environment:
+      - CONSUL_HOST=http://consul-server-bootstrap
+      - CONSUL_PORT=8500
+      - MONGODB_HOST=mongodb://mongo
+      - MONGODB_PORT=27017
+      - BROKER_BOOTSTRAP_SERVERS=kafka1:9092,kafka2:9092,kafka3:9092
+
+  transform:
+    build:
+      context: ../transform/
+      dockerfile: Dockerfile
+    networks:
+      - infrastructure_default
+    volumes:
+      - ../transform/target:/app
+    environment:
+      - CONSUL_HOST=http://consul-server-bootstrap
+      - CONSUL_PORT=8500
+      - MONGODB_HOST=mongodb://mongo
+      - MONGODB_PORT=27017
+      - BROKER_BOOTSTRAP_SERVERS=kafka1:9092,kafka2:9092,kafka3:9092
 
 networks:
   infrastructure_default:
