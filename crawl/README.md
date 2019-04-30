@@ -1,5 +1,5 @@
 # Crawl Service
-The purpose of the crawl module is be the master record of all crawl jobs and record the start and end timestamps and status.  The generated id of a crawl job is used throughout the rest of the application to map back to the originating job.
+The purpose of the crawl module is to be the master record of all crawl jobs and record the start/end timestamps and status.  The generated id of a crawl job is used throughout the rest of the application to map back to the originating job.
 
 ## API
 ### Start crawl job
