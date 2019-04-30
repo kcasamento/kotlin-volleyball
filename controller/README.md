@@ -1,7 +1,7 @@
 # Controller Service
 The controller service acts as the main consumer of all application events being streamed to kafka.  It subscribes to all topics and handles each event by its respective business logic requirements.
 
-##Consumes (Topic::Event)
+## Consumes (Topic::Event)
 - kac.crawl.event::CrawlJobStarted
 - kac.scraper.event::ScrapeFinished
 - kac.crawl.event::CrawlJobCompleted
